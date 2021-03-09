@@ -1,10 +1,18 @@
-const { app, BrowserWindow, screen, Tray, Menu, dialog } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  screen,
+  Tray,
+  Menu,
+  dialog,
+  remote,
+  Notification,
+} = require("electron");
 const path = require("path");
 
 const setupEvents = require("./installers/setupEvents");
 
 let win;
-let mainWindow;
 
 if (setupEvents.handleSquirrelEvent()) {
   // squirrel event handled and app will exit in 1000ms, so don't do anything else
@@ -18,7 +26,8 @@ function createWindow() {
     width: width,
     height: height,
     center: true,
-    thickFrame: true,
+    closable: false,
+
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
@@ -32,7 +41,24 @@ function createWindow() {
     event.preventDefault();
     win.setSkipTaskbar(true);
     tray = createTray();
+
+    // setTimeout(() => {
+    //   let notification = new Notification({
+    //     urgency: "normal",
+    //     title: "Hello World",
+    //     icon: "assets/icons/win/favicon.ico",
+
+    //   });
+    //   notification.show();
+    // }, 3000);
   });
+
+  // win.on("close", function (event) {
+  //   event.preventDefault();
+  //   win.setSkipTaskbar(true);
+  //   tray = createTray();
+  //   win.minimize();
+  // });
 
   win.on("restore", function (event) {
     win.show();
@@ -67,6 +93,16 @@ function createTray() {
       },
     },
     {
+      label: "About",
+      click: function () {
+        win.webContents.executeJavaScript(`
+        
+          alert('Rafeeq Vendor Dashboard - Version : 1.0.0 - \u00A9 2021')
+        
+        `);
+      },
+    },
+    {
       label: "Exit",
       click: function () {
         app.isQuiting = true;
@@ -76,9 +112,20 @@ function createTray() {
   ]);
 
   appIcon.on("double-click", function (event) {
-    mainWindow.show();
+    win.show();
   });
   appIcon.setToolTip("Rafeeq Vendor");
   appIcon.setContextMenu(contextMenu);
+  appIcon.displayBalloon({
+    title: "Rafeeq",
+    content: "The app is minimized and it will be running on background",
+    icon: "assets/icons/win/favicon.ico",
+  });
+
+  // appIcon.on("balloon-click", () => {
+  //   win.show();
+  //   win.setSkipTaskbar(false);
+  //   tray.destroy();
+  // });
   return appIcon;
 }
